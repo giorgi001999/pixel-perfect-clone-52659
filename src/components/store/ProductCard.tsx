@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { Package } from "lucide-react";
 import { conditionLabel, formatGel, stockLabel } from "@/lib/catalog";
+import { AddToCartButton } from "./AddToCartButton";
 import type { Product, StockStatus } from "@/lib/catalog-types";
 
 const stockCls: Record<StockStatus, string> = {
@@ -30,11 +31,8 @@ export function ProductImage({ product, className = "" }: { product: Product; cl
 
 export function ProductCard({ product }: { product: Product }) {
   return (
-    <Link
-      to="/products/$productId"
-      params={{ productId: product.id }}
-      className="group flex flex-col overflow-hidden rounded-lg border bg-card transition-shadow hover:shadow-md"
-    >
+    <div className="group flex flex-col overflow-hidden rounded-lg border bg-card transition-shadow hover:shadow-md">
+    <Link to="/products/$productId" params={{ productId: product.id }} className="flex flex-1 flex-col">
       <ProductImage product={product} className="aspect-[4/3] w-full" />
       <div className="flex flex-1 flex-col gap-1.5 p-4">
         <div className="flex items-center justify-between text-xs text-muted-foreground">
@@ -49,5 +47,9 @@ export function ProductCard({ product }: { product: Product }) {
         </div>
       </div>
     </Link>
+      <div className="px-4 pb-4">
+        <AddToCartButton product={product} />
+      </div>
+    </div>
   );
 }
