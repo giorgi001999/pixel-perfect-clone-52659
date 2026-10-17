@@ -64,12 +64,12 @@ export function matchesQuery(p: Product, q: string): boolean {
 export type SortKey = "relevance" | "price_asc" | "price_desc" | "name";
 
 export interface ProductQuery extends VehicleSelection {
-  q?: string;
-  category?: string;
-  condition?: string;
-  brand?: string;
-  inStock?: boolean;
-  sort?: SortKey;
+  q?: string | undefined;
+  category?: string | undefined;
+  condition?: string | undefined;
+  brand?: string | undefined;
+  inStock?: boolean | undefined;
+  sort?: SortKey | undefined;
 }
 
 export function listProducts(query: ProductQuery = {}): Product[] {

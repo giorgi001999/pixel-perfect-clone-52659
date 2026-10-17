@@ -21,4 +21,4 @@ export interface Product {
   featured?: boolean;
 }
 
-export interface VehicleSelection { make?: string; model?: string; year?: number }
+export interface VehicleSelection { make?: string | undefined; model?: string; year?: number | undefined }
