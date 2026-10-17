@@ -1,9 +1,9 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { z } from "zod";
 import { useState, useEffect } from "react";
 import { ProductCard } from "@/components/store/ProductCard";
 import { VehicleSelector } from "@/components/store/VehicleSelector";
-import { conditionLabel, getBrands, getCategories, listProducts, type SortKey } from "@/lib/catalog";
+import { conditionLabel, getBrands, getCategories, listProducts } from "@/lib/catalog";
 import { supabase } from "@/lib/supabase";
 import { createNewProduct, uploadProductImage } from "@/lib/adminActions";
 import type { Product } from "@/lib/catalog-types";
@@ -34,7 +34,7 @@ export const Route = createFileRoute("/products/")({
 const selCls = "h-10 w-full rounded-md border border-input bg-card px-3 text-sm";
 const inputCls = "w-full rounded-md border p-2 text-sm bg-card mt-1 text-foreground";
 
-export function Listing() {
+function Listing() {
   const s = Route.useSearch();
   const navigate = useNavigate({ from: "/products/" });
   const set = (patch: Partial<typeof s>) => navigate({ search: (prev) => ({ ...prev, ...patch }) });
@@ -64,7 +64,7 @@ export function Listing() {
             oemNumber: p.id.slice(0, 10).toUpperCase(),
             priceGel: Number(p.price),
             category: p.category,
-            condition: p.condition as any,
+            condition: (p.condition || 'new_aftermarket') as any,
             brand: p.brand,
             stock: p.in_stock ? "in_stock" : "out_of_stock",
             imageUrl: p.image_url || undefined,
@@ -79,13 +79,13 @@ export function Listing() {
           setDbProducts(formatted);
         }
       } catch (err) {
-        console.error(err);
+        console.error("Database fallback initialization failure log:", err);
       }
     }
     loadLiveParts();
   }, [message]);
 
-  const products = listProducts({ ...s, sort: s.sort as SortKey, dbProducts });
+  const products = listProducts({ ...s, sort: s.sort as any, dbProducts }) || [];
   const vehicle = [s.make, s.model, s.year].filter(Boolean).join(" ");
 
   const handleAdminSubmit = async (e: React.FormEvent) => {
@@ -172,6 +172,10 @@ export function Listing() {
                 <input type="text" className={inputCls} placeholder="Make" value={form.make} onChange={e => setForm({...form, make: e.target.value})} />
                 <input type="text" className={inputCls} placeholder="Model" value={form.model} onChange={e => setForm({...form, model: e.target.value})} />
               </div>
+              <div className="grid gap-2 sm:grid-cols-2 mt-2">
+                <input type="number" className={inputCls} placeholder="From Year" value={form.yearStart} onChange={e => setForm({...form, yearStart: e.target.value})} />
+                <input type="number" className={inputCls} placeholder="To Year" value={form.yearEnd} onChange={e => setForm({...form, yearEnd: e.target.value})} />
+              </div>
             </div>
             <div>
               <label className="text-sm font-semibold uppercase">Image</label>
@@ -198,6 +202,10 @@ export function Listing() {
               <select aria-label="Condition" className={selCls} value={s.condition ?? ""} onChange={(e) => set({ condition: e.target.value || undefined })}>
                 <option value="">Any condition</option>
                 {Object.entries(conditionLabel).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+              </select>
+              <select aria-label="Brand" className={selCls} value={s.brand ?? ""} onChange={(e) => set({ brand: e.target.value || undefined })}>
+                <option value="">All brands</option>
+                {getBrands().map((b) => <option key={b} value={b}>{b}</option>)}
               </select>
             </div>
           </aside>
