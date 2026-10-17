@@ -1,9 +1,9 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { z } from "zod";
 import { useState, useEffect } from "react";
 import { ProductCard } from "@/components/store/ProductCard";
 import { VehicleSelector } from "@/components/store/VehicleSelector";
-import { conditionLabel, getBrands, getCategories, listProducts } from "@/lib/catalog";
+import { conditionLabel, getBrands, getCategories, listProducts, type SortKey } from "@/lib/catalog";
 import { supabase } from "@/lib/supabase";
 import { createNewProduct, uploadProductImage } from "@/lib/adminActions";
 import type { Product } from "@/lib/catalog-types";
@@ -54,6 +54,7 @@ function Listing() {
   useEffect(() => {
     async function loadLiveParts() {
       try {
+        if (!supabase) return;
         const { data, error } = await supabase.from('products').select('*');
         if (error) throw error;
         if (data) {
@@ -79,13 +80,13 @@ function Listing() {
           setDbProducts(formatted);
         }
       } catch (err) {
-        console.error("Database fallback initialization failure log:", err);
+        console.error("Supabase fallback initialization failure log:", err);
       }
     }
     loadLiveParts();
   }, [message]);
 
-  const products = listProducts({ ...s, sort: s.sort as any, dbProducts }) || [];
+  const products = listProducts({ ...s, sort: s.sort as SortKey, dbProducts }) || [];
   const vehicle = [s.make, s.model, s.year].filter(Boolean).join(" ");
 
   const handleAdminSubmit = async (e: React.FormEvent) => {
@@ -179,7 +180,7 @@ function Listing() {
             </div>
             <div>
               <label className="text-sm font-semibold uppercase">Image</label>
-              <input type="file" accept="image/*" className={inputCls} onChange={e => setImageFile(e.target.files ? e.target.files[0] : null)} />
+              <input type="file" accept="image/*" className={inputCls} onChange={e => setImageFile(e.target.files ? e.target.files : null)} />
             </div>
             <button type="submit" disabled={loading} className="w-full bg-primary text-primary-foreground h-11 font-bold rounded uppercase cursor-pointer">
               {loading ? 'Uploading...' : 'Publish Part'}
