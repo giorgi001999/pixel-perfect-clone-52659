@@ -70,10 +70,14 @@ export interface ProductQuery extends VehicleSelection {
   brand?: string | undefined;
   inStock?: boolean | undefined;
   sort?: SortKey | undefined;
+  dbProducts?: Product[] | undefined; // 👈 Add database collection stream variable
 }
 
 export function listProducts(query: ProductQuery = {}): Product[] {
-  let list = sampleProducts.filter(
+  // Merge static hardcoded sample files with live database entries
+  const masterCollection = [...sampleProducts, ...(query.dbProducts || [])];
+
+  let list = masterCollection.filter(
     (p) =>
       fitsVehicle(p, query) &&
       matchesQuery(p, query.q ?? "") &&
@@ -88,10 +92,12 @@ export function listProducts(query: ProductQuery = {}): Product[] {
   return list;
 }
 
-export function getFeatured(): Product[] {
-  return sampleProducts.filter((p) => p.featured);
+export function getFeatured(dbProducts?: Product[]): Product[] {
+  const masterCollection = [...sampleProducts, ...(dbProducts || [])];
+  return masterCollection.filter((p) => p.featured);
 }
 
-export function getProduct(id: string): Product | undefined {
-  return sampleProducts.find((p) => p.id === id);
+export function getProduct(id: string, dbProducts?: Product[]): Product | undefined {
+  const masterCollection = [...sampleProducts, ...(dbProducts || [])];
+  return masterCollection.find((p) => p.id === id);
 }
