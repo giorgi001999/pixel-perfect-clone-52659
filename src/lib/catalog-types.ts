@@ -17,6 +17,8 @@ export interface Product {
   condition: Condition;
   images: string[];
   stock: StockStatus;
+  /** Exact units available, only if recorded. */
+  stockQty?: number | undefined;
   compatibility: Compatibility[];
   featured?: boolean;
 }

@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
-import { Wrench } from "lucide-react";
+import { ShoppingCart, Wrench } from "lucide-react";
+import { useCart } from "@/lib/cart-context";
 import { SearchBar } from "./SearchBar";
 
 export function SiteHeader() {
@@ -15,8 +16,23 @@ export function SiteHeader() {
         <div className="order-last w-full sm:order-none sm:ml-auto sm:max-w-md">
           <SearchBar />
         </div>
+        <CartLink />
       </div>
     </header>
+  );
+}
+
+function CartLink() {
+  const { count } = useCart();
+  return (
+    <Link to="/cart" aria-label={`Cart, ${count} items`} className="relative ml-auto p-2 opacity-90 hover:opacity-100 sm:ml-0">
+      <ShoppingCart className="h-6 w-6" />
+      {count > 0 && (
+        <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-xs font-bold text-primary-foreground">
+          {count > 99 ? "99+" : count}
+        </span>
+      )}
+    </Link>
   );
 }
 

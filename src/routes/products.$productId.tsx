@@ -1,5 +1,6 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { ProductImage, StockBadge } from "@/components/store/ProductCard";
+import { AddToCartButton } from "@/components/store/AddToCartButton";
 import { conditionLabel, formatGel, getProduct } from "@/lib/catalog";
 
 export const Route = createFileRoute("/products/$productId")({
@@ -49,6 +50,7 @@ function Detail() {
             <span className="font-display text-4xl font-bold">{formatGel(p.priceGel)}</span>
             <StockBadge stock={p.stock} />
           </div>
+          <div className="mt-4"><AddToCartButton product={p} size="lg" /></div>
           <p className="mt-6 leading-relaxed">{p.description}</p>
           <h2 className="mt-8 text-xl font-bold uppercase">Confirmed compatible vehicles</h2>
           <ul className="mt-2 divide-y rounded-lg border bg-card text-sm">
