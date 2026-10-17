@@ -38,7 +38,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './dist' 
+          path: '.output/public' # Changed to grab your static Lovable output files
 
   deploy:
     environment:
