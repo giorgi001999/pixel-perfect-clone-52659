@@ -33,13 +33,12 @@ export const Route = createFileRoute("/products/")({
 const selCls = "h-10 w-full rounded-md border border-input bg-card px-3 text-sm";
 
 function Listing() {
-  const s = Route.useSearch();
+  const s = Route.useSearch() || {};
   const navigate = useNavigate({ from: "/products/" });
   const set = (patch: Partial<typeof s>) => navigate({ search: (prev) => ({ ...prev, ...patch }) });
 
   const [dbProducts, setDbProducts] = useState<Product[]>([]);
 
-  // Automatically load real database parts uploaded via the admin panel
   useEffect(() => {
     async function loadLiveParts() {
       try {
@@ -48,12 +47,11 @@ function Listing() {
         if (error) throw error;
         
         if (data) {
-          // Format raw PostgreSQL fields to align seamlessly with Lovable's Product type structure
           const formatted: Product[] = data.map((p: any) => ({
-            id: p.id || String(Math.random()),
+            id: p.id ? String(p.id) : String(Math.random()),
             name: p.name || "Unnamed Component",
-            sku: String(p.id || '').slice(0, 8).toUpperCase(),
-            oemNumber: String(p.id || '').slice(0, 10).toUpperCase(),
+            sku: String(p.id || '').slice(0, 8).toUpperCase() || "SKU-PENDING",
+            oemNumber: String(p.id || '').slice(0, 10).toUpperCase() || "OEM-PENDING",
             priceGel: Number(p.price) || 0,
             category: p.category || "Other",
             condition: (p.condition || 'new_aftermarket') as any,
@@ -62,24 +60,36 @@ function Listing() {
             imageUrl: p.image_url || undefined,
             featured: false,
             compatibility: p.make ? [{
-              make: p.make,
-              model: p.model || "",
-              startYear: Number(p.year_start) || 2000,
+              make: String(p.make),
+              model: String(p.model || ""),
+              startYear: Number(p.year_start) || 1990,
               endYear: Number(p.year_end) || 2026
             }] : []
           }));
           setDbProducts(formatted);
         }
       } catch (err) {
-        console.error("Database alignment fallback log:", err);
+        console.error("Supabase data alignment warning:", err);
       }
     }
     loadLiveParts();
   }, []);
 
-  // Inject real dbProducts array straight into the static search pipeline
-  // Locate this precise command inside your Listing() component function:
-  const products = listProducts({ ...s, sort: s.sort as SortKey, dbProducts: dbProducts || [] }) || [];
+  // Pass query properties safely with empty default search overrides
+  const safeQuery = {
+    q: s.q || "",
+    make: s.make || undefined,
+    model: s.model || undefined,
+    year: s.year || undefined,
+    category: s.category || undefined,
+    condition: s.condition || undefined,
+    brand: s.brand || undefined,
+    inStock: s.inStock || undefined,
+    sort: (s.sort as SortKey) || "relevance",
+    dbProducts: dbProducts || []
+  };
+
+  const products = listProducts(safeQuery) || [];
   const vehicle = [s.make, s.model, s.year].filter(Boolean).join(" ");
   return (
     <div className="mx-auto grid max-w-7xl gap-8 px-4 py-8 lg:grid-cols-[260px_1fr]">
@@ -88,7 +98,7 @@ function Listing() {
           <h2 className="mb-2 text-lg font-bold uppercase">Your vehicle</h2>
           <VehicleSelector key={vehicle} initial={s} compact />
           {s.make && (
-            <button className="mt-2 text-sm text-muted-foreground hover:text-primary cursor-pointer" onClick={() => set({ make: undefined, model: undefined, year: undefined })}>
+            <button type="button" className="mt-2 text-sm text-muted-foreground hover:text-primary cursor-pointer" onClick={() => set({ make: undefined, model: undefined, year: undefined })}>
               Clear vehicle
             </button>
           )}
