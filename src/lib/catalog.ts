@@ -46,6 +46,7 @@ export function getBrands(): string[] {
 /** True only if the product has an explicit compatibility record covering the selection. */
 export function fitsVehicle(p: Product, sel: VehicleSelection): boolean {
   if (!sel.make) return true;
+  if (!p.compatibility || !Array.isArray(p.compatibility)) return true; // 👈 Fixed: Defensive guard
   return p.compatibility.some(
     (c) =>
       c.make === sel.make &&
@@ -55,10 +56,10 @@ export function fitsVehicle(p: Product, sel: VehicleSelection): boolean {
 }
 
 export function matchesQuery(p: Product, q: string): boolean {
-  const s = q.trim().toLowerCase().replace(/[\s-]/g, "");
+  const s = (q || "").trim().toLowerCase().replace(/[\s-]/g, "");
   if (!s) return true;
-  const norm = (x: string) => x.toLowerCase().replace(/[\s-]/g, "");
-  return [p.name, p.sku, p.oemNumber].some((f) => norm(f).includes(s));
+  const norm = (x: string) => (x || "").toLowerCase().replace(/[\s-]/g, "");
+  return [p.name, p.sku, p.oemNumber].some((f) => norm(f || "").includes(s));
 }
 
 export type SortKey = "relevance" | "price_asc" | "price_desc" | "name";
@@ -70,15 +71,16 @@ export interface ProductQuery extends VehicleSelection {
   brand?: string | undefined;
   inStock?: boolean | undefined;
   sort?: SortKey | undefined;
-  dbProducts?: Product[] | undefined; // 👈 Add database collection stream variable
+  dbProducts?: Product[] | undefined; // 👈 Ensure type schema matches client states
 }
 
 export function listProducts(query: ProductQuery = {}): Product[] {
-  // Merge static hardcoded sample files with live database entries
+  // Safe array merge ensuring no undefined values crash the framework mapping operations
   const masterCollection = [...sampleProducts, ...(query.dbProducts || [])];
 
   let list = masterCollection.filter(
     (p) =>
+      p &&
       fitsVehicle(p, query) &&
       matchesQuery(p, query.q ?? "") &&
       (!query.category || p.category === query.category) &&
@@ -86,18 +88,18 @@ export function listProducts(query: ProductQuery = {}): Product[] {
       (!query.brand || p.brand === query.brand) &&
       (!query.inStock || p.stock !== "out_of_stock"),
   );
-  if (query.sort === "price_asc") list = [...list].sort((a, b) => a.priceGel - b.priceGel);
-  if (query.sort === "price_desc") list = [...list].sort((a, b) => b.priceGel - a.priceGel);
-  if (query.sort === "name") list = [...list].sort((a, b) => a.name.localeCompare(b.name));
+  if (query.sort === "price_asc") list = [...list].sort((a, b) => (a.priceGel || 0) - (b.priceGel || 0));
+  if (query.sort === "price_desc") list = [...list].sort((a, b) => (b.priceGel || 0) - (a.priceGel || 0));
+  if (query.sort === "name") list = [...list].sort((a, b) => (a.name || "").localeCompare(b.name || ""));
   return list;
 }
 
 export function getFeatured(dbProducts?: Product[]): Product[] {
   const masterCollection = [...sampleProducts, ...(dbProducts || [])];
-  return masterCollection.filter((p) => p.featured);
+  return masterCollection.filter((p) => p && p.featured);
 }
 
 export function getProduct(id: string, dbProducts?: Product[]): Product | undefined {
   const masterCollection = [...sampleProducts, ...(dbProducts || [])];
-  return masterCollection.find((p) => p.id === id);
+  return masterCollection.find((p) => p && p.id === id);
 }
