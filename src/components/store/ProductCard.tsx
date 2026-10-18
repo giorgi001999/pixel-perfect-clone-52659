@@ -19,15 +19,41 @@ export function StockBadge({ stock }: { stock: StockStatus }) {
   );
 }
 
-export function ProductImage({ product, className = "" }: { product: Product; className?: string }) {
-  return product.images[0] ? (
-    <img src={product.images[0]} alt={product.name} className={`object-cover ${className}`} loading="lazy" />
+
+export function ProductImage({
+  product,
+  className = "",
+}: {
+  product: Product;
+  className?: string;
+}) {
+  const p = product as Product & {
+    image?: string;
+    imageUrl?: string;
+  };
+
+  const images = Array.isArray(p.images) ? p.images : [];
+  const image = images[0] || p.image || p.imageUrl || null;
+
+  return image ? (
+    <img
+      src={image}
+      alt={product.name || "Product"}
+      className={`object-cover ${className}`}
+      loading="lazy"
+      onError={(e) => {
+        e.currentTarget.style.display = "none";
+      }}
+    />
   ) : (
-    <div className={`flex items-center justify-center bg-muted text-muted-foreground ${className}`}>
+    <div
+      className={`flex items-center justify-center bg-muted text-muted-foreground ${className}`}
+    >
       <Package className="h-10 w-10" strokeWidth={1.25} />
     </div>
   );
 }
+
 
 export function ProductCard({ product }: { product: Product }) {
   return (
