@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PARTS.GE — Administration Portal</title>
+  <title>PARTS — Administration Portal</title>
   <style>
     body { font-family: sans-serif; background-color: #09090b; color: #f4f4f5; margin: 0; padding: 0; min-height: 100vh; display: flex; flex-col: justify-between; }
     header { border-bottom: 1px solid #27272a; background-color: #09090b; padding: 16px; }
@@ -125,37 +125,60 @@
     const alertBox = document.getElementById('alertBox');
     const btn = document.getElementById('btn');
 
-    form.addEventListener('submit', async (e) => {
+        form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      btn.innerText = "Publishing part...";
+      btn.innerText = "Registering and pushing data assets...";
       btn.disabled = true;
       alertBox.style.display = "none";
       alertBox.className = "";
 
+      const name = document.getElementById('name').value;
+      const price = parseFloat(document.getElementById('price').value);
+      const condition = document.getElementById('condition').value;
+      const category = document.getElementById('category').value;
+      const brand = document.getElementById('brand').value;
+      const make = document.getElementById('make').value;
+      const model = document.getElementById('model').value;
+      const yearStart = parseInt(document.getElementById('yearStart').value) || null;
+      const yearEnd = parseInt(document.getElementById('yearEnd').value) || null;
+      const imageUrl = document.getElementById('imageUrl').value || null;
+
       try {
-        const { error } = await _supabase.from('products').insert([
-          {
-            name: document.getElementById('name').value,
-            price: parseFloat(document.getElementById('price').value),
-            category: document.getElementById('category').value,
-            condition: document.getElementById('condition').value,
-            brand: document.getElementById('brand').value,
-            make: document.getElementById('make').value || null,
-            model: document.getElementById('model').value || null,
-            year_start: parseInt(document.getElementById('yearStart').value) || null,
-            year_end: parseInt(document.getElementById('yearEnd').value) || null,
-            image_url: document.getElementById('imageUrl').value || null,
-            in_stock: true
-          }
-        ]);
+        // --- IMPROVED EXECUTION LINE WITH ROW RESPONSE LOGGER ---
+        const { data, error } = await _supabase
+          .from('products')
+          .insert([
+            {
+              name: name,
+              price: price,
+              category: category,
+              condition: condition,
+              brand: brand,
+              make: make || null,
+              model: model || null,
+              year_start: yearStart,
+              year_end: yearEnd,
+              image_url: imageUrl,
+              in_stock: true
+            }
+          ])
+          .select(); // 👈 Instructs Supabase to return the raw data trace object on success
 
-        if (error) throw error;
+        if (error) {
+          // If Supabase sends back an explicit server error message, write it right to the screen
+          console.error("Supabase Engine Tracing Details:", error);
+          alertBox.innerText = "❌ Database Refusal: " + error.message + " (Code: " + error.code + ")";
+          alertBox.className = "error";
+          return;
+        }
 
-        alertBox.innerText = "🎉 Success! Product added to live store database.";
+        console.log("Successfully inserted rows tracking array:", data);
+        alertBox.innerText = "🎉 Success! The inventory row has been published directly into the storefront data grid clusters.";
         alertBox.className = "success";
         form.reset();
       } catch (err) {
-        alertBox.innerText = "❌ Database Error: " + err.message;
+        console.error("Browser Context Loop Crash:", err);
+        alertBox.innerText = "❌ Connection Failure: " + err.message;
         alertBox.className = "error";
       } finally {
         btn.innerText = "Publish Part";
