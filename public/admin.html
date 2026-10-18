@@ -112,11 +112,9 @@
       </form>
     </div>
   </div>
-    <!-- Completely removed jsdelivr CDN link to bypass internet routing blocks -->
-  <script type="module">
-    // 🔍 STEP 1: IMPORT ACCELERATED ENVIROMENT PACKAGES DIRECTLY FROM COMPILED CLOUD LAYERS
-    import { createClient } from "https://esm.sh";
-
+    <!-- Completely independent local bundle block -->
+  <script src="/supabase-local.js"></script>
+  <script>
     const alertBox = document.getElementById('alertBox');
     const form = document.getElementById('adminForm');
     const btn = document.getElementById('btn');
@@ -128,92 +126,69 @@
       console.error(text);
     }
 
-    // ⚠️ PASTE YOUR COPIED CREDENTIALS FROM YOUR SUPABASE SCREEN HERE
-    const supabaseUrl = "https://lqnojjapzsahfylvixnv.supabase.co".trim().replace(/\/$/, ""); 
-    const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxxbm9qamFwenNhaGZ5bHZpeG52Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIyNTIxMDEsImV4cCI6MjEwNzgyODEwMX0.CmLQ_1OHXJQxEo3zm7MVxu1ei1-_HQ6hSmG25ChMOXY".trim();
+    // ⚠️ PASTE YOUR ACTUAL CREDENTIALS FROM YOUR SUPABASE SCREEN HERE
+    const supabaseUrl = "https://supabase.co"; 
+    const supabaseKey = "your-anon-key-here";
 
     let _supabase;
     try {
-      _supabase = createClient(supabaseUrl, supabaseKey);
+      if (typeof supabase === 'undefined') {
+        throw new Error("Local fallback loader engine failed.");
+      }
+      _supabase = supabase.createClient(supabaseUrl, supabaseKey);
     } catch (initError) {
-      showErrorOnScreen("❌ Client Initialization Crash: " + initError.message);
+      showErrorOnScreen("❌ Client Crash: " + initError.message);
     }
 
-    // ⚡ STEP 2: CAPTURE AND PARSE BROWSER INPUT ATTRIBUTES
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       
       if (!_supabase) {
-        showErrorOnScreen("❌ Submission Blocked: Supabase client connection engine is not active.");
+        showErrorOnScreen("❌ Error: Connection client is inactive.");
         return;
       }
 
-      btn.innerText = "Processing server records...";
+      btn.innerText = "Publishing part to database...";
       btn.disabled = true;
       alertBox.style.display = "none";
       alertBox.className = "";
 
       const getValue = (id) => document.getElementById(id) ? document.getElementById(id).value : '';
 
-      const name = getValue('name');
-      const price = parseFloat(getValue('price'));
-      const condition = getValue('condition');
-      const category = getValue('category');
-      const brand = getValue('brand');
-      const make = getValue('make');
-      const model = getValue('model');
-      const yearStart = parseInt(getValue('yearStart')) || null;
-      const yearEnd = parseInt(getValue('yearEnd')) || null;
-      const imageUrl = getValue('imageUrl') || null;
-
-      if (!name || isNaN(price)) {
-        showErrorOnScreen("❌ Form Validation Alert: Please fill out all required fields marked with *.");
-        btn.innerText = "Publish Part";
-        btn.disabled = false;
-        return;
-      }
-
-      // 💾 STEP 3: EXECUTE SECURE CLOUD STORAGE SYNC LAYERS
       try {
         const payload = {
-          name: name,
-          price: price,
-          category: category,
-          condition: condition,
-          brand: brand,
-          make: make || null,
-          model: model || null,
-          year_start: yearStart,
-          year_end: yearEnd,
-          image_url: imageUrl,
+          name: getValue('name'),
+          price: parseFloat(getValue('price')),
+          category: getValue('category'),
+          condition: getValue('condition'),
+          brand: getValue('brand'),
+          make: getValue('make') || null,
+          model: getValue('model') || null,
+          year_start: parseInt(getValue('yearStart')) || null,
+          year_end: parseInt(getValue('yearEnd')) || null,
+          image_url: getValue('imageUrl') || null,
           in_stock: true
         };
 
-        console.log("Sending explicit data payload stream:", payload);
-
-        const { data, error } = await _supabase
-          .from('products')
-          .insert([payload])
-          .select();
+        const { data, error } = await _supabase.from('products').insert([payload]).select();
 
         if (error) {
-          showErrorOnScreen("❌ Supabase Database Rejection: " + error.message + " (Code: " + error.code + " | Details: " + (error.details || 'None') + ")");
+          showErrorOnScreen("❌ Supabase Rejection: " + error.message + " (Status: " + error.code + ")");
           return;
         }
 
-        alertBox.innerText = "🎉 Success! The inventory row has been published directly into the storefront data grid clusters.";
+        alertBox.innerText = "🎉 Success! The part has been added to your live database.";
         alertBox.className = "success";
         alertBox.style.display = "block";
         form.reset();
       } catch (catchErr) {
-        showErrorOnScreen("❌ Browser Internal Catch Crash: " + catchErr.message);
+        showErrorOnScreen("❌ Connection Failure: " + catchErr.message);
       } finally {
         btn.innerText = "Publish Part";
         btn.disabled = false;
       }
     });
   </script>
-
-
+  
 </body>
 </html>
