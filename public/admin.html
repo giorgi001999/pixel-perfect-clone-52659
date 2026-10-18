@@ -112,10 +112,11 @@
       </form>
     </div>
   </div>
-    <!-- Complete, self-contained accelerated connection engine -->
-  <script src="https://jsdelivr.net"></script>
-  <script>
-    // 🔍 STEP 1: VERIFY ENGINES INITIALIZATION TRACE
+    <!-- Completely removed jsdelivr CDN link to bypass internet routing blocks -->
+  <script type="module">
+    // 🔍 STEP 1: IMPORT ACCELERATED ENVIROMENT PACKAGES DIRECTLY FROM COMPILED CLOUD LAYERS
+    import { createClient } from "https://esm.sh";
+
     const alertBox = document.getElementById('alertBox');
     const form = document.getElementById('adminForm');
     const btn = document.getElementById('btn');
@@ -133,10 +134,7 @@
 
     let _supabase;
     try {
-      if (typeof supabase === 'undefined') {
-        throw new Error("The Supabase CDN core library failed to download. Check internet routing filters.");
-      }
-      _supabase = supabase.createClient(supabaseUrl, supabaseKey);
+      _supabase = createClient(supabaseUrl, supabaseKey);
     } catch (initError) {
       showErrorOnScreen("❌ Client Initialization Crash: " + initError.message);
     }
@@ -155,7 +153,6 @@
       alertBox.style.display = "none";
       alertBox.className = "";
 
-      // Capture and fall back safely if elements are missing
       const getValue = (id) => document.getElementById(id) ? document.getElementById(id).value : '';
 
       const name = getValue('name');
@@ -216,6 +213,7 @@
       }
     });
   </script>
+
 
 </body>
 </html>
