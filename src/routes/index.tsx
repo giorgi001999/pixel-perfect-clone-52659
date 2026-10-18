@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { ProductCard } from "@/components/store/ProductCard";
 import { VehicleSelector } from "@/components/store/VehicleSelector";
-import { conditionLabel, getBrands, getCategories, listProducts } from "@/lib/catalog";
+import { conditionLabel, listProducts } from "@/lib/catalog";
 import { supabase } from "@/lib/supabase";
 import { createNewProduct, uploadProductImage } from "@/lib/adminActions";
 import type { Product } from "@/lib/catalog-types";
@@ -61,7 +61,9 @@ function Index() {
     loadLiveParts();
   }, [message]);
 
-  const featuredProducts = listProducts({ dbProducts }).filter(p => p.featured || p.id.length > 5) || [];
+  // Safe execution of catalog list combining filters and dynamic fallback structures
+  const baseItems = listProducts({ dbProducts: dbProducts || [] }) || [];
+  const featuredProducts = baseItems.filter(p => p && p.id) || [];
 
   const handleAdminSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -101,7 +103,7 @@ function Index() {
           <p className="text-xs text-muted-foreground">Switch views to upload real data records dynamically or browse the storefront home screen.</p>
         </div>
         <button type="button" onClick={() => setIsAdminMode(!isAdminMode)} className="bg-primary text-primary-foreground text-xs font-bold uppercase px-4 py-2 rounded cursor-pointer">
-          {isAdminMode ? "⚡ View Storefront Home" : "🛠️ Open Upload Panel"}
+          {isAdminMode ? "⚡ View Storefront Home" : "🛠️ Open Panel"}
         </button>
       </div>
 
@@ -132,15 +134,24 @@ function Index() {
               <div>
                 <label className="text-sm font-semibold uppercase">Category *</label>
                 <select required className={inputCls} value={form.category} onChange={e => setForm({...form, category: e.target.value})}>
-                  <option value="">Select</option>
-                  {getCategories().map(c => <option key={c} value={c}>{c}</option>)}
+                  <option value="Brakes">Brakes</option>
+                  <option value="Electrical">Electrical</option>
+                  <option value="Engine">Engine</option>
+                  <option value="Filters">Filters</option>
+                  <option value="Lighting">Lighting</option>
+                  <option value="Suspension">Suspension</option>
                 </select>
               </div>
               <div>
                 <label className="text-sm font-semibold uppercase">Brand *</label>
                 <select required className={inputCls} value={form.brand} onChange={e => setForm({...form, brand: e.target.value})}>
-                  <option value="">Select</option>
-                  {getBrands().map(b => <option key={b} value={b}>{b}</option>)}
+                  <option value="Toyota">Toyota</option>
+                  <option value="BMW">BMW</option>
+                  <option value="Mercedes-Benz">Mercedes-Benz</option>
+                  <option value="Hyundai">Hyundai</option>
+                  <option value="Brembo">Brembo</option>
+                  <option value="Aisin">Aisin</option>
+                  <option value="Mann-Filter">Mann-Filter</option>
                 </select>
               </div>
             </div>
@@ -150,10 +161,14 @@ function Index() {
                 <input type="text" className={inputCls} placeholder="Make" value={form.make} onChange={e => setForm({...form, make: e.target.value})} />
                 <input type="text" className={inputCls} placeholder="Model" value={form.model} onChange={e => setForm({...form, model: e.target.value})} />
               </div>
+              <div className="grid gap-2 sm:grid-cols-2 mt-2">
+                <input type="number" className={inputCls} placeholder="From Year" value={form.yearStart} onChange={e => setForm({...form, yearStart: e.target.value})} />
+                <input type="number" className={inputCls} placeholder="To Year" value={form.yearEnd} onChange={e => setForm({...form, yearEnd: e.target.value})} />
+              </div>
             </div>
             <div>
               <label className="text-sm font-semibold uppercase">Image</label>
-              <input type="file" accept="image/*" className={inputCls} onChange={e => setImageFile(e.target.files ? e.target.files : null)} />
+              <input type="file" accept="image/*" className={inputCls} onChange={e => setImageFile(e.target.files ? e.target.files[0] : null)} />
             </div>
             <button type="submit" disabled={loading} className="w-full bg-primary text-primary-foreground h-11 font-bold rounded uppercase cursor-pointer">
               {loading ? 'Uploading...' : 'Publish Part'}
@@ -177,9 +192,9 @@ function Index() {
               <Link to="/products" className="text-sm text-primary font-semibold hover:underline">View all catalog →</Link>
             </div>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {featuredProducts.map((p) => (
+              {featuredProducts.map((p) => p && p.id ? (
                 <ProductCard key={p.id} product={p} />
-              ))}
+              ) : null)}
             </div>
           </section>
         </div>
