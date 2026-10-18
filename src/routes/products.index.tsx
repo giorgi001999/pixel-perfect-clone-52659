@@ -42,20 +42,29 @@ function ListingWrapper() {
         if (error) throw error;
         
         if (data) {
-          const formatted = data.map((p: any) => {
-            // 🛠️ CRUCIAL DEFENSIVE FIX: Always provide a fallback compatibility structure
-            // This prevents ProductCard from throwing a "reading '0' of undefined" crash
-            const compatibilityArray = p.make ? [{
+                    const formatted = data.map((p: any) => ({
+            id: String(p.id || Math.random()),
+            name: p.name || "Unnamed Component",
+            sku: String(p.id || '').slice(0, 8).toUpperCase(),
+            oemNumber: String(p.id || '').slice(0, 10).toUpperCase(),
+            priceGel: Number(p.price) || 0,
+            category: p.category || "Other",
+            condition: (p.condition || 'new_aftermarket') as any,
+            brand: p.brand || "Generic",
+            stock: p.in_stock ? "in_stock" : "out_of_stock",
+            price: Number(p.price) || 0,
+            stockStatus: p.in_stock ? "In stock" : "Out of stock",
+            image: p.image_url || "/placeholder.svg",
+            imageUrl: p.image_url || "/placeholder.svg",
+            featured: false,
+            // 🛠️ Maps cleanly into your new catalog validator parameters
+            compatibility: p.make ? [{
               make: String(p.make),
               model: String(p.model || ""),
-              startYear: Number(p.year_start) || 2000,
+              startYear: Number(p.year_start) || 1990,
               endYear: Number(p.year_end) || 2026
-            }] : [{
-              make: "Universal",
-              model: "All Models",
-              startYear: 1990,
-              endYear: 2026
-            }];
+            }] : []
+          }));
 
             return {
               id: String(p.id || Math.random()),
