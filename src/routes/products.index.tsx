@@ -67,16 +67,16 @@ function Listing() {
         if (error) throw error;
         if (data) {
           const formatted = data.map((p: any) => ({
-            id: p.id,
-            name: p.name,
-            sku: p.id.slice(0, 8).toUpperCase(),
-            oemNumber: p.id.slice(0, 10).toUpperCase(),
-            priceGel: Number(p.price),
-            category: p.category,
-            condition: p.condition || 'new_aftermarket',
-            brand: p.brand,
+            id: p.id || String(Math.random()),
+            name: p.name || "Unnamed Part",
+            sku: String(p.id || '').slice(0, 8).toUpperCase() || "SKU-PENDING",
+            oemNumber: String(p.id || '').slice(0, 10).toUpperCase() || "OEM-PENDING",
+            priceGel: Number(p.price) || 0,
+            category: p.category || "Other",
+            condition: p.condition === 'new' ? 'new_aftermarket' : (p.condition || 'new_aftermarket'),
+            brand: p.brand || "Generic",
             stock: p.in_stock ? "in_stock" : "out_of_stock",
-            image: p.image_url || "/placeholder.svg", // 👈 FIXED: Changed field from imageUrl to image
+            image: p.image_url || "/placeholder.svg",
             featured: false,
             compatibility: p.make ? [{
               make: p.make,
@@ -88,7 +88,7 @@ function Listing() {
           setDbProducts(formatted);
         }
       } catch (err) {
-        console.error("Database connection logs fallback:", err);
+        console.error("Database alignment warning:", err);
       }
     }
     loadLiveParts();
@@ -168,7 +168,10 @@ function Listing() {
               <div>
                 <label className="text-sm font-semibold uppercase">Condition *</label>
                 <select className={inputCls} value={form.condition} onChange={e => setForm({...form, condition: e.target.value})}>
-                  {Object.entries(conditionLabel).map(([k,v]) => <option key={k} value={k}>{v}</option>)}
+                  <option value="new_aftermarket">New · Aftermarket</option>
+                  <option value="new_oem">New · Genuine OEM</option>
+                  <option value="used_oem">Used · OEM</option>
+                  <option value="refurbished">Refurbished</option>
                 </select>
               </div>
             </div>
@@ -176,14 +179,14 @@ function Listing() {
               <div>
                 <label className="text-sm font-semibold uppercase">Category *</label>
                 <select required className={inputCls} value={form.category} onChange={e => setForm({...form, category: e.target.value})}>
-                  <option value="">Select</option>
+                  <option value="">Select Category</option>
                   {getCategories().map(c => <option key={c} value={c}>{c}</option>)}
                 </select>
               </div>
               <div>
                 <label className="text-sm font-semibold uppercase">Brand *</label>
                 <select required className={inputCls} value={form.brand} onChange={e => setForm({...form, brand: e.target.value})}>
-                  <option value="">Select</option>
+                  <option value="">Select Brand</option>
                   {getBrands().map(b => <option key={b} value={b}>{b}</option>)}
                 </select>
               </div>
@@ -201,7 +204,7 @@ function Listing() {
             </div>
             <div>
               <label className="text-sm font-semibold uppercase">Image</label>
-              <input type="file" accept="image/*" className={inputCls} onChange={e => setImageFile(e.target.files ? e.target.files[0] : null)} />
+              <input type="file" accept="image/*" className={inputCls} onChange={e => setImageFile(e.target.files ? e.target.files : null)} />
             </div>
             <button type="submit" disabled={loading} className="w-full bg-primary text-primary-foreground h-11 font-bold rounded uppercase cursor-pointer">
               {loading ? 'Uploading...' : 'Publish Part'}
@@ -243,11 +246,11 @@ function Listing() {
                 <p className="text-sm text-muted-foreground">{products.length} results</p>
               </div>
             </div>
-            {products.length ? (
+            {products && products.length > 0 ? (
               <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                {products.map((p) => (
+                {products.map((p) => p && p.id ? (
                   <ProductCard key={p.id} product={p} />
-                ))}
+                ) : null)}
               </div>
             ) : (
               <div className="mt-10 rounded-lg border border-dashed p-10 text-center text-muted-foreground">
