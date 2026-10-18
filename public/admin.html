@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PARTS.GE — Administration Panel</title>
+  <script src="https://jsdelivr.net"></script>
+  <script src="https://tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-gray-100 font-sans min-h-screen flex flex-col justify-between">
+
+  <header class="border-b border-gray-800 bg-gray-950 p-4">
+    <div class="max-w-7xl mx-auto flex items-center justify-between">
+      <a href="/" class="text-xl font-extrabold tracking-wider text-white">🛠️ PARTS<span class="text-orange-500">.GE</span> ADMIN</a>
+      <a href="/products" class="text-xs uppercase bg-gray-800 text-gray-300 font-bold px-3 py-1.5 rounded hover:bg-gray-700 transition-all">← Back to Store</a>
+    </div>
+  </header>
+
+  <main class="max-w-2xl mx-auto w-full px-4 py-12">
+    <h1 class="text-3xl font-black uppercase tracking-tight mb-2 text-white">Upload Real Inventory</h1>
+    <p class="text-gray-400 mb-8 text-sm">Publish matching spare parts records directly to your active marketplace database catalog.</p>
+
+    <div id="alertBox" class="hidden p-4 mb-6 rounded text-sm border font-medium"></div>
+
+    <form id="adminForm" class="space-y-5 bg-gray-950 p-6 rounded-xl border border-gray-800 shadow-xl">
+      <div>
+        <label class="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-1">Part Name *</label>
+        <input required id="name" type="text" class="w-full bg-gray-900 border border-gray-800 rounded p-2.5 text-sm text-white focus:outline-none focus:border-orange-500" placeholder="e.g. Front Light Headlamp TOYOTA Prius">
+      </div>
+
+      <div class="grid gap-4 sm:grid-cols-2">
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-1">Price (₾) *</label>
+          <input required id="price" type="number" class="w-full bg-gray-900 border border-gray-800 rounded p-2.5 text-sm text-white focus:outline-none focus:border-orange-500" placeholder="120">
+        </div>
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-1">Condition *</label>
+          <select id="condition" class="w-full bg-gray-900 border border-gray-800 rounded p-2.5 text-sm text-white focus:outline-none focus:border-orange-500">
+            <option value="new_aftermarket">New · Aftermarket</option>
+            <option value="new_oem">New · Genuine OEM</option>
+            <option value="used_oem">Used · OEM</option>
+            <option value="refurbished">Refurbished</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="grid gap-4 sm:grid-cols-2">
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-1">Category *</label>
+          <select required id="category" class="w-full bg-gray-900 border border-gray-800 rounded p-2.5 text-sm text-white focus:outline-none focus:border-orange-500">
+            <option value="Brakes">Brakes</option>
+            <option value="Electrical">Electrical</option>
+            <option value="Engine">Engine</option>
+            <option value="Filters">Filters</option>
+            <option value="Lighting">Lighting</option>
+            <option value="Suspension">Suspension</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-1">Brand *</label>
+          <select required id="brand" class="w-full bg-gray-900 border border-gray-800 rounded p-2.5 text-sm text-white focus:outline-none focus:border-orange-500">
+            <option value="Toyota">Toyota</option>
+            <option value="BMW">BMW</option>
+            <option value="Mercedes-Benz">Mercedes-Benz</option>
+            <option value="Hyundai">Hyundai</option>
+            <option value="Brembo">Brembo</option>
+            <option value="Aisin">Aisin</option>
+            <option value="Mann-Filter">Mann-Filter</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="border-t border-gray-800 pt-4">
+        <h3 class="text-xs font-black uppercase text-orange-500 mb-3 tracking-widest">Vehicle Diagnostics Compatibility</h3>
+        <div class="grid gap-3 sm:grid-cols-2">
+          <input type="text" id="make" class="w-full bg-gray-900 border border-gray-800 rounded p-2.5 text-sm text-white focus:outline-none focus:border-orange-500" placeholder="Make (e.g. Toyota)">
+          <input type="text" id="model" class="w-full bg-gray-900 border border-gray-800 rounded p-2.5 text-sm text-white focus:outline-none focus:border-orange-500" placeholder="Model (e.g. Prius)">
+        </div>
+        <div class="grid gap-3 sm:grid-cols-2 mt-3">
+          <input type="number" id="yearStart" class="w-full bg-gray-900 border border-gray-800 rounded p-2.5 text-sm text-white focus:outline-none focus:border-orange-500" placeholder="From Year (e.g. 2010)">
+          <input type="number" id="yearEnd" class="w-full bg-gray-900 border border-gray-800 rounded p-2.5 text-sm text-white focus:outline-none focus:border-orange-500" placeholder="To Year (e.g. 2015)">
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-1">Upload Part Image URL</label>
+        <input id="imageUrl" type="url" class="w-full bg-gray-900 border border-gray-800 rounded p-2.5 text-sm text-white focus:outline-none focus:border-orange-500" placeholder="https://example.com">
+      </div>
+
+      <button type="submit" id="btn" class="w-full bg-orange-600 text-white h-12 font-bold rounded uppercase tracking-wider hover:bg-orange-500 transition-all mt-4">
+        Publish Item to Real Database
+      </button>
+    </form>
+  </main>
+
+  <footer class="text-center p-6 text-xs text-gray-600 border-t border-gray-800 bg-gray-950">
+    © 2026 PARTS.GE Control Deck Portal
+  </footer>
+
+  <script>
+    // INJECT DATA SECURELY FROM YOUR ENVIRONMENT CREDENTIALS
+    const supabaseUrl = "https://lqnojjapzsahfylvixnv.supabase.co"; 
+    const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxxbm9qamFwenNhaGZ5bHZpeG52Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIyNTIxMDEsImV4cCI6MjEwNzgyODEwMX0.CmLQ_1OHXJQxEo3zm7MVxu1ei1-_HQ6hSmG25ChMOXY";
+
+    const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
+    const form = document.getElementById('adminForm');
+    const alertBox = document.getElementById('alertBox');
+    const btn = document.getElementById('btn');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      btn.innerText = "Processing upload records...";
+      btn.disabled = true;
+      alertBox.className = "hidden";
+
+      const name = document.getElementById('name').value;
+      const price = parseFloat(document.getElementById('price').value);
+      const condition = document.getElementById('condition').value;
+      const category = document.getElementById('category').value;
+      const brand = document.getElementById('brand').value;
+      const make = document.getElementById('make').value;
+      const model = document.getElementById('model').value;
+      const yearStart = parseInt(document.getElementById('yearStart').value) || null;
+      const yearEnd = parseInt(document.getElementById('yearEnd').value) || null;
+      const imageUrl = document.getElementById('imageUrl').value || null;
+
+      try {
+        const { data, error } = await _supabase.from('products').insert([
+          {
+            name,
+            price,
+            category,
+            condition,
+            brand,
+            make: make || null,
+            model: model || null,
+            year_start: yearStart,
+            year_end: yearEnd,
+            image_url: imageUrl,
+            in_stock: true
+          }
+        ]);
+
+        if (error) throw error;
+
+        alertBox.innerText = "🎉 Item successfully stored into live database catalog entries!";
+        alertBox.className = "p-4 mb-6 rounded text-sm border font-medium bg-green-900 border-green-700 text-green-200";
+        form.reset();
+      } catch (err) {
+        alertBox.innerText = "❌ Database Connection Failure: " + err.message;
+        alertBox.className = "p-4 mb-6 rounded text-sm border font-medium bg-red-900 border-red-700 text-red-200";
+      } finally {
+        btn.innerText = "Publish Item to Real Database";
+        btn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
