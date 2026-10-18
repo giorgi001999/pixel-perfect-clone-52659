@@ -10,8 +10,21 @@ export function SiteHeader() {
         <Link to="/" className="flex items-center gap-2 font-display text-2xl font-bold tracking-wide">
           <Wrench className="h-5 w-5 text-primary" /> PARTS<span className="text-primary">.GE</span>
         </Link>
-        <nav className="text-sm">
+        <nav className="text-sm flex items-center gap-4">
           <Link to="/products" className="opacity-80 hover:opacity-100">All parts</Link>
+          {/* Admin Control Switch Toggle */}
+          <button 
+            type="button"
+            onClick={() => {
+              if (typeof window !== 'undefined') {
+                window.localStorage.setItem('admin_mode', 'true');
+                window.location.href = '/products';
+              }
+            }} 
+            className="text-xs font-bold uppercase border border-primary text-primary px-3 py-1 rounded hover:bg-primary hover:text-primary-foreground transition-all cursor-pointer"
+          >
+            🛠️ Admin
+          </button>
         </nav>
         <div className="order-last w-full sm:order-none sm:ml-auto sm:max-w-md">
           <SearchBar />
