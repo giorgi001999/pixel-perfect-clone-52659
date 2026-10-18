@@ -11,11 +11,13 @@ export function SiteHeader() {
           <Wrench className="h-5 w-5 text-primary" /> PARTS<span className="text-primary">.GE</span>
         </Link>
         <nav className="text-sm flex items-center gap-4">
-          <Link to="/products" className="opacity-80 hover:opacity-100">All parts</Link>
-          {/* Replace the old <a> link with this high-performance TanStack link element */}
-          <Link to="/admin" className="text-xs font-bold uppercase border border-primary text-primary px-3 py-1 rounded hover:bg-primary hover:text-primary-foreground transition-all inline-block align-middle">
-          🛠️ Admin
-          </Link>
+          <a 
+  href="/admin.html" 
+  className="text-xs font-bold uppercase border border-primary text-primary px-3 py-1 rounded hover:bg-primary hover:text-primary-foreground transition-all"
+>
+  🛠️ Admin
+</a>
+
 
         </nav>
         <div className="order-last w-full sm:order-none sm:ml-auto sm:max-w-md">
