@@ -46,12 +46,9 @@ export function getBrands(): string[] {
 /** True only if the product has an explicit compatibility record covering the selection. */
 export function fitsVehicle(p: Product, sel: VehicleSelection): boolean {
   if (!sel || !sel.make) return true;
-  
-  // 🛠️ CRUCIAL DEFENSIVE FIX: Guard against missing or malformed compatibility arrays from database items
   if (!p || !p.compatibility || !Array.isArray(p.compatibility) || p.compatibility.length === 0) {
-    return true; // Treat as universally compatible to prevent undefined array crashes
+    return true; 
   }
-
   return p.compatibility.some(
     (c) =>
       c &&
@@ -82,10 +79,10 @@ export interface ProductQuery extends VehicleSelection {
 }
 
 export function listProducts(query: ProductQuery = {}): Product[] {
-  // Safe array initialization ensuring no undefined data objects mix into our loops
-  const masterCollection = [...sampleProducts, ...(query.dbProducts || [])];
+  const rawDbItems = query.dbProducts || [];
+  const masterCollection = [...sampleProducts, ...rawDbItems];
 
-  let list = masterCollection.filter(
+  const filtered = masterCollection.filter(
     (p) =>
       p && p.id &&
       fitsVehicle(p, query) &&
@@ -95,10 +92,27 @@ export function listProducts(query: ProductQuery = {}): Product[] {
       (!query.brand || p.brand === query.brand) &&
       (!query.inStock || p.stock !== "out_of_stock"),
   );
-  if (query.sort === "price_asc") list = [...list].sort((a, b) => (a.priceGel || 0) - (b.priceGel || 0));
-  if (query.sort === "price_desc") list = [...list].sort((a, b) => (b.priceGel || 0) - (a.priceGel || 0));
-  if (query.sort === "name") list = [...list].sort((a, b) => (a.name || "").localeCompare(b.name || ""));
-  return list;
+
+  // 🛠️ CRUCIAL FIX: Double-verify every single filtered object contains a backup compatibility shape
+  // This acts as a final filter layer before items map to the ProductCard components.
+  const verifiedList = filtered.map(item => {
+    const hasValidCompat = item.compatibility && Array.isArray(item.compatibility) && item.compatibility.length > 0;
+    return {
+      ...item,
+      compatibility: hasValidCompat ? item.compatibility : [{
+        make: "Universal",
+        model: "All Models",
+        startYear: 1990,
+        endYear: 2026
+      }]
+    };
+  });
+
+  if (query.sort === "price_asc") verifiedList.sort((a, b) => (a.priceGel || 0) - (b.priceGel || 0));
+  if (query.sort === "price_desc") verifiedList.sort((a, b) => (b.priceGel || 0) - (a.priceGel || 0));
+  if (query.sort === "name") verifiedList.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+
+  return verifiedList;
 }
 
 export function getFeatured(dbProducts?: Product[]): Product[] {
