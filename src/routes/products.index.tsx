@@ -76,13 +76,13 @@ function Listing() {
             condition: p.condition || 'new_aftermarket',
             brand: p.brand,
             stock: p.in_stock ? "in_stock" : "out_of_stock",
-            imageUrl: p.image_url || undefined,
+            image: p.image_url || "/placeholder.svg", // 👈 FIXED: Changed field from imageUrl to image
             featured: false,
             compatibility: p.make ? [{
               make: p.make,
               model: p.model || "",
-              startYear: p.year_start || 2000,
-              endYear: p.year_end || 2026
+              startYear: Number(p.year_start) || 2000,
+              endYear: Number(p.year_end) || 2026
             }] : []
           }));
           setDbProducts(formatted);
@@ -201,7 +201,7 @@ function Listing() {
             </div>
             <div>
               <label className="text-sm font-semibold uppercase">Image</label>
-              <input type="file" accept="image/*" className={inputCls} onChange={e => setImageFile(e.target.files ? e.target.files : null)} />
+              <input type="file" accept="image/*" className={inputCls} onChange={e => setImageFile(e.target.files ? e.target.files[0] : null)} />
             </div>
             <button type="submit" disabled={loading} className="w-full bg-primary text-primary-foreground h-11 font-bold rounded uppercase cursor-pointer">
               {loading ? 'Uploading...' : 'Publish Part'}
@@ -245,7 +245,9 @@ function Listing() {
             </div>
             {products.length ? (
               <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                {products.map((p) => <ProductCard key={p.id} product={p} />)}
+                {products.map((p) => (
+                  <ProductCard key={p.id} product={p} />
+                ))}
               </div>
             ) : (
               <div className="mt-10 rounded-lg border border-dashed p-10 text-center text-muted-foreground">
