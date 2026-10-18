@@ -42,30 +42,8 @@ function ListingWrapper() {
         if (error) throw error;
         
         if (data) {
-                    const formatted = data.map((p: any) => ({
-            id: String(p.id || Math.random()),
-            name: p.name || "Unnamed Component",
-            sku: String(p.id || '').slice(0, 8).toUpperCase(),
-            oemNumber: String(p.id || '').slice(0, 10).toUpperCase(),
-            priceGel: Number(p.price) || 0,
-            category: p.category || "Other",
-            condition: (p.condition || 'new_aftermarket') as any,
-            brand: p.brand || "Generic",
-            stock: p.in_stock ? "in_stock" : "out_of_stock",
-            price: Number(p.price) || 0,
-            stockStatus: p.in_stock ? "In stock" : "Out of stock",
-            image: p.image_url || "/placeholder.svg",
-            imageUrl: p.image_url || "/placeholder.svg",
-            featured: false,
-            // 🛠️ Maps cleanly into your new catalog validator parameters
-            compatibility: p.make ? [{
-              make: String(p.make),
-              model: String(p.model || ""),
-              startYear: Number(p.year_start) || 1990,
-              endYear: Number(p.year_end) || 2026
-            }] : []
-          }));
-
+          const formatted = data.map((p: any) => {
+            const hasCompat = p.make && String(p.make).trim().length > 0;
             return {
               id: String(p.id || Math.random()),
               name: p.name || "Unnamed Component",
@@ -81,13 +59,23 @@ function ListingWrapper() {
               brand: p.brand || "Generic",
               category: p.category || "Other",
               featured: false,
-              compatibility: compatibilityArray
+              compatibility: hasCompat ? [{
+                make: String(p.make),
+                model: String(p.model || ""),
+                startYear: Number(p.year_start) || 1990,
+                endYear: Number(p.year_end) || 2026
+              }] : [{
+                make: "Universal",
+                model: "All Models",
+                startYear: 1990,
+                endYear: 2026
+              }]
             };
           });
           setDbProducts(formatted);
         }
       } catch (err) {
-        console.error("Supabase load fallback tracking warning:", err);
+        console.error(err);
       }
     }
     loadLiveParts();
@@ -120,7 +108,7 @@ function Listing({ dbProducts }: { dbProducts: any[] }) {
     <div className="mx-auto grid max-w-7xl gap-8 px-4 py-8 lg:grid-cols-[260px_1fr]">
       <aside className="space-y-6">
         <div>
-          <h2 className="mb-2 text-lg font-bold uppercase">Your vehicle</h2>
+          <h2 className="text-lg font-bold uppercase mb-2">Your vehicle</h2>
           <VehicleSelector key={vehicle} initial={s} compact />
           {s.make && (
             <button type="button" className="mt-2 text-sm text-muted-foreground hover:text-primary cursor-pointer" onClick={() => set({ make: undefined, model: undefined, year: undefined })}>
