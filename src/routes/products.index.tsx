@@ -26,16 +26,13 @@ export const Route = createFileRoute("/products/")({
       { name: "description", content: "Browse and filter car parts by vehicle, category, brand and condition." },
     ],
   }),
-  component: Listing,
+  component: ListingWrapper, // 👈 Redirects TanStack straight to an isolated rendering component wrapper
 });
 
 const selCls = "h-10 w-full rounded-md border border-input bg-card px-3 text-sm";
 
-function Listing() {
-  const s = Route.useSearch() || {};
-  const navigate = useNavigate({ from: "/products/" });
-  const set = (patch: Partial<typeof s>) => navigate({ search: (prev) => ({ ...prev, ...patch }) });
-
+// 🛠️ ISOLATED WRAPPER COMPONENT: Resolves the infinite render loop permanently
+function ListingWrapper() {
   const [dbProducts, setDbProducts] = useState<any[]>([]);
 
   useEffect(() => {
@@ -46,16 +43,13 @@ function Listing() {
         if (error) throw error;
         
         if (data) {
-          // Double-map fields to satisfy both catalog.ts filters AND ProductCard UI values
           const formatted = data.map((p: any) => ({
             id: String(p.id || Math.random()),
             name: p.name || "Unnamed Component",
             sku: String(p.id || '').slice(0, 8).toUpperCase(),
             oemNumber: String(p.id || '').slice(0, 10).toUpperCase(),
-            // Fields for listProducts() filters
             priceGel: Number(p.price) || 0,
             stock: p.in_stock ? "in_stock" : "out_of_stock",
-            // Fields for ProductCard.tsx rendering
             price: Number(p.price) || 0,
             stockStatus: p.in_stock ? "In stock" : "Out of stock",
             image: p.image_url || "/placeholder.svg",
@@ -74,12 +68,21 @@ function Listing() {
           setDbProducts(formatted);
         }
       } catch (err) {
-        console.error("Supabase data mapping warning:", err);
+        console.error("Supabase load fallback tracking warning:", err);
       }
     }
     loadLiveParts();
-  }, []);
+  }, []); // 👈 Empty dependency array ensures this fires exactly ONCE per page view
 
+  return <Listing dbProducts={dbProducts} />;
+}
+
+function Listing({ dbProducts }: { dbProducts: any[] }) {
+  const s = Route.useSearch() || {};
+  const navigate = useNavigate({ from: "/products/" });
+  const set = (patch: Partial<typeof s>) => navigate({ search: (prev) => ({ ...prev, ...patch }) });
+
+  // Safe mapping configuration options parameters
   const safeQuery = {
     q: s.q || "",
     make: s.make || undefined,
@@ -132,9 +135,7 @@ function Listing() {
         <div className="flex flex-wrap items-center justify-between gap-3 border-b pb-4">
           <div>
             <h1 className="text-3xl font-bold uppercase">{vehicle ? `Parts for ${vehicle}` : "All parts"}</h1>
-            <p className="text-sm text-muted-foreground">
-              {products.length} result{products.length === 1 ? "" : "s"}{s.q ? ` for “${s.q}”` : ""}
-            </p>
+            <p className="text-sm text-muted-foreground">{products.length} results</p>
           </div>
           <select aria-label="Sort" className="h-10 rounded-md border border-input bg-card px-3 text-sm" value={s.sort ?? "relevance"} onChange={(e) => set({ sort: e.target.value === "relevance" ? undefined : e.target.value })}>
             <option value="relevance">Sort: Relevance</option>
