@@ -6,7 +6,6 @@ import { VehicleSelector } from "@/components/store/VehicleSelector";
 import { conditionLabel, getBrands, getCategories, listProducts, type SortKey } from "@/lib/catalog";
 import { supabase } from "@/lib/supabase";
 import { createNewProduct, uploadProductImage } from "@/lib/adminActions";
-import type { Product } from "@/lib/catalog-types";
 
 const schema = z.object({
   q: z.string().optional().catch(undefined),
@@ -22,6 +21,12 @@ const schema = z.object({
 
 export const Route = createFileRoute("/products/")({
   validateSearch: (s) => schema.parse(s),
+  head: () => ({
+    meta: [
+      { title: "Shop Car Parts — PARTS.GE" },
+      { name: "description", content: "Browse and filter car parts by vehicle, category, brand and condition." },
+    ],
+  }),
   component: Listing,
 });
 
@@ -34,7 +39,7 @@ function Listing() {
   const set = (patch: Partial<typeof s>) => navigate({ search: (prev) => ({ ...prev, ...patch }) });
 
   const [isAdminMode, setIsAdminMode] = useState(false);
-  const [dbProducts, setDbProducts] = useState<Product[]>([]);
+  const [dbProducts, setDbProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   
@@ -45,7 +50,6 @@ function Listing() {
   });
   const [imageFile, setImageFile] = useState<File | null>(null);
 
-  // Sync state with header navigation variables triggers on load
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const mode = window.localStorage.getItem('admin_mode');
@@ -55,7 +59,6 @@ function Listing() {
     }
   }, []);
 
-  // Fetch items uploaded to the database automatically
   useEffect(() => {
     async function loadLiveParts() {
       try {
@@ -63,14 +66,14 @@ function Listing() {
         const { data, error } = await supabase.from('products').select('*');
         if (error) throw error;
         if (data) {
-          const formatted: Product[] = data.map(p => ({
+          const formatted = data.map((p: any) => ({
             id: p.id,
             name: p.name,
             sku: p.id.slice(0, 8).toUpperCase(),
             oemNumber: p.id.slice(0, 10).toUpperCase(),
             priceGel: Number(p.price),
             category: p.category,
-            condition: (p.condition || 'new_aftermarket') as any,
+            condition: p.condition || 'new_aftermarket',
             brand: p.brand,
             stock: p.in_stock ? "in_stock" : "out_of_stock",
             imageUrl: p.image_url || undefined,
@@ -85,13 +88,13 @@ function Listing() {
           setDbProducts(formatted);
         }
       } catch (err) {
-        console.error(err);
+        console.error("Database connection logs fallback:", err);
       }
     }
     loadLiveParts();
   }, [message]);
 
-  const products = listProducts({ ...s, sort: s.sort as SortKey, dbProducts }) || [];
+  const products = listProducts({ ...s, sort: s.sort as SortKey, dbProducts: dbProducts || [] }) || [];
   const vehicle = [s.make, s.model, s.year].filter(Boolean).join(" ");
 
   const handleAdminSubmit = async (e: React.FormEvent) => {
@@ -125,7 +128,6 @@ function Listing() {
   };
   return (
     <div className="mx-auto max-w-7xl px-4 py-8">
-      {/* Control Banner Display Header Deck */}
       <div className="flex items-center justify-between bg-muted border p-4 rounded-lg mb-8">
         <div>
           <h4 className="font-bold text-sm uppercase">Catalog Control Deck</h4>
@@ -150,11 +152,10 @@ function Listing() {
       </div>
 
       {isAdminMode ? (
-        /* PARTS MANAGEMENT FORM LAYOUT GRID */
         <div className="max-w-2xl mx-auto py-4">
           <h1 className="text-3xl font-bold uppercase mb-6">Parts Administration</h1>
           {message && <div className="p-4 mb-4 rounded border bg-secondary">{message}</div>}
-          <form onSubmit={handleAdminSubmit} className="space-y-4 border p-6 rounded-lg bg-card shadow-sm">
+          <form onSubmit={handleAdminSubmit} className="space-y-4 border p-6 rounded-lg bg-card">
             <div>
               <label className="text-sm font-semibold uppercase">Part Name *</label>
               <input required type="text" className={inputCls} value={form.name} onChange={e => setForm({...form, name: e.target.value})} />
@@ -208,7 +209,6 @@ function Listing() {
           </form>
         </div>
       ) : (
-        /* STANDARD RETAIL STOREFRONT VIEW GRID */
         <div className="grid gap-8 lg:grid-cols-[260px_1fr]">
           <aside className="space-y-6">
             <div>
