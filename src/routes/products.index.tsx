@@ -5,7 +5,6 @@ import { ProductCard } from "@/components/store/ProductCard";
 import { VehicleSelector } from "@/components/store/VehicleSelector";
 import { conditionLabel, getBrands, getCategories, listProducts, type SortKey } from "@/lib/catalog";
 import { supabase } from "@/lib/supabase";
-import type { Product } from "@/lib/catalog-types";
 
 const schema = z.object({
   q: z.string().optional().catch(undefined),
@@ -37,7 +36,7 @@ function Listing() {
   const navigate = useNavigate({ from: "/products/" });
   const set = (patch: Partial<typeof s>) => navigate({ search: (prev) => ({ ...prev, ...patch }) });
 
-  const [dbProducts, setDbProducts] = useState<Product[]>([]);
+  const [dbProducts, setDbProducts] = useState<any[]>([]);
 
   useEffect(() => {
     async function loadLiveParts() {
@@ -47,17 +46,23 @@ function Listing() {
         if (error) throw error;
         
         if (data) {
-          const formatted: Product[] = data.map((p: any) => ({
-            id: p.id ? String(p.id) : String(Math.random()),
+          // Double-map fields to satisfy both catalog.ts filters AND ProductCard UI values
+          const formatted = data.map((p: any) => ({
+            id: String(p.id || Math.random()),
             name: p.name || "Unnamed Component",
-            sku: String(p.id || '').slice(0, 8).toUpperCase() || "SKU-PENDING",
-            oemNumber: String(p.id || '').slice(0, 10).toUpperCase() || "OEM-PENDING",
+            sku: String(p.id || '').slice(0, 8).toUpperCase(),
+            oemNumber: String(p.id || '').slice(0, 10).toUpperCase(),
+            // Fields for listProducts() filters
             priceGel: Number(p.price) || 0,
-            category: p.category || "Other",
-            condition: (p.condition || 'new_aftermarket') as any,
-            brand: p.brand || "Generic",
             stock: p.in_stock ? "in_stock" : "out_of_stock",
-            imageUrl: p.image_url || undefined,
+            // Fields for ProductCard.tsx rendering
+            price: Number(p.price) || 0,
+            stockStatus: p.in_stock ? "In stock" : "Out of stock",
+            image: p.image_url || "/placeholder.svg",
+            imageUrl: p.image_url || "/placeholder.svg",
+            condition: p.condition || 'new_aftermarket',
+            brand: p.brand || "Generic",
+            category: p.category || "Other",
             featured: false,
             compatibility: p.make ? [{
               make: String(p.make),
@@ -69,13 +74,12 @@ function Listing() {
           setDbProducts(formatted);
         }
       } catch (err) {
-        console.error("Supabase data alignment warning:", err);
+        console.error("Supabase data mapping warning:", err);
       }
     }
     loadLiveParts();
   }, []);
 
-  // Pass query properties safely with empty default search overrides
   const safeQuery = {
     q: s.q || "",
     make: s.make || undefined,
@@ -148,7 +152,7 @@ function Listing() {
           </div>
         ) : (
           <div className="mt-10 rounded-lg border border-dashed p-10 text-center text-muted-foreground">
-            No parts with confirmed compatibility match these filters.{" "}
+            No parts match these filters.{" "}
             <Link to="/products" className="text-primary hover:underline">Reset all</Link>
           </div>
         )}
