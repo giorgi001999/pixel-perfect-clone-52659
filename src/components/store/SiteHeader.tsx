@@ -12,19 +12,13 @@ export function SiteHeader() {
         </Link>
         <nav className="text-sm flex items-center gap-4">
           <Link to="/products" className="opacity-80 hover:opacity-100">All parts</Link>
-          {/* Admin Control Switch Toggle */}
-          <button 
-            type="button"
-            onClick={() => {
-              if (typeof window !== 'undefined') {
-                window.localStorage.setItem('admin_mode', 'true');
-                window.location.href = '/products';
-              }
-            }} 
-            className="text-xs font-bold uppercase border border-primary text-primary px-3 py-1 rounded hover:bg-primary hover:text-primary-foreground transition-all cursor-pointer"
+          {/* Fixed: Points directly to your clean independent public/admin.html dashboard page */}
+          <a 
+            href="/admin.html" 
+            className="text-xs font-bold uppercase border border-primary text-primary px-3 py-1 rounded hover:bg-primary hover:text-primary-foreground transition-all inline-block align-middle"
           >
             🛠️ Admin
-          </button>
+          </a>
         </nav>
         <div className="order-last w-full sm:order-none sm:ml-auto sm:max-w-md">
           <SearchBar />
