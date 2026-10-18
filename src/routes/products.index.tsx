@@ -78,7 +78,8 @@ function Listing() {
   }, []);
 
   // Inject real dbProducts array straight into the static search pipeline
-  const products = listProducts({ ...s, sort: s.sort as SortKey, dbProducts }) || [];
+  // Locate this precise command inside your Listing() component function:
+  const products = listProducts({ ...s, sort: s.sort as SortKey, dbProducts: dbProducts || [] }) || [];
   const vehicle = [s.make, s.model, s.year].filter(Boolean).join(" ");
   return (
     <div className="mx-auto grid max-w-7xl gap-8 px-4 py-8 lg:grid-cols-[260px_1fr]">
