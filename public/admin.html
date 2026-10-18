@@ -112,79 +112,110 @@
       </form>
     </div>
   </div>
-
-  <!-- Optimized async script execution layer at the bottom -->
+    <!-- Complete, self-contained accelerated connection engine -->
   <script src="https://jsdelivr.net"></script>
   <script>
-    // ⚠️ PASTE YOUR ACTUAL COPIED CREDENTIALS FROM YOUR SUPABASE SCREEN HERE
-    const supabaseUrl = "https://lqnojjapzsahfylvixnv.supabase.co"; 
-    const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxxbm9qamFwenNhaGZ5bHZpeG52Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIyNTIxMDEsImV4cCI6MjEwNzgyODEwMX0.CmLQ_1OHXJQxEo3zm7MVxu1ei1-_HQ6hSmG25ChMOXY";
-
-    const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
-    const form = document.getElementById('adminForm');
+    // 🔍 STEP 1: VERIFY ENGINES INITIALIZATION TRACE
     const alertBox = document.getElementById('alertBox');
+    const form = document.getElementById('adminForm');
     const btn = document.getElementById('btn');
 
-        form.addEventListener('submit', async (e) => {
+    function showErrorOnScreen(text) {
+      alertBox.innerText = text;
+      alertBox.className = "error";
+      alertBox.style.display = "block";
+      console.error(text);
+    }
+
+    // ⚠️ PASTE YOUR COPIED CREDENTIALS FROM YOUR SUPABASE SCREEN HERE
+    const supabaseUrl = "https://supabase.co".trim().replace(/\/$/, ""); 
+    const supabaseKey = "your-anon-key-here".trim();
+
+    let _supabase;
+    try {
+      if (typeof supabase === 'undefined') {
+        throw new Error("The Supabase CDN core library failed to download. Check internet routing filters.");
+      }
+      _supabase = supabase.createClient(supabaseUrl, supabaseKey);
+    } catch (initError) {
+      showErrorOnScreen("❌ Client Initialization Crash: " + initError.message);
+    }
+
+    // ⚡ STEP 2: CAPTURE AND PARSE BROWSER INPUT ATTRIBUTES
+    form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      btn.innerText = "Registering and pushing data assets...";
+      
+      if (!_supabase) {
+        showErrorOnScreen("❌ Submission Blocked: Supabase client connection engine is not active.");
+        return;
+      }
+
+      btn.innerText = "Processing server records...";
       btn.disabled = true;
       alertBox.style.display = "none";
       alertBox.className = "";
 
-      const name = document.getElementById('name').value;
-      const price = parseFloat(document.getElementById('price').value);
-      const condition = document.getElementById('condition').value;
-      const category = document.getElementById('category').value;
-      const brand = document.getElementById('brand').value;
-      const make = document.getElementById('make').value;
-      const model = document.getElementById('model').value;
-      const yearStart = parseInt(document.getElementById('yearStart').value) || null;
-      const yearEnd = parseInt(document.getElementById('yearEnd').value) || null;
-      const imageUrl = document.getElementById('imageUrl').value || null;
+      // Capture and fall back safely if elements are missing
+      const getValue = (id) => document.getElementById(id) ? document.getElementById(id).value : '';
 
+      const name = getValue('name');
+      const price = parseFloat(getValue('price'));
+      const condition = getValue('condition');
+      const category = getValue('category');
+      const brand = getValue('brand');
+      const make = getValue('make');
+      const model = getValue('model');
+      const yearStart = parseInt(getValue('yearStart')) || null;
+      const yearEnd = parseInt(getValue('yearEnd')) || null;
+      const imageUrl = getValue('imageUrl') || null;
+
+      if (!name || isNaN(price)) {
+        showErrorOnScreen("❌ Form Validation Alert: Please fill out all required fields marked with *.");
+        btn.innerText = "Publish Part";
+        btn.disabled = false;
+        return;
+      }
+
+      // 💾 STEP 3: EXECUTE SECURE CLOUD STORAGE SYNC LAYERS
       try {
-        // --- IMPROVED EXECUTION LINE WITH ROW RESPONSE LOGGER ---
+        const payload = {
+          name: name,
+          price: price,
+          category: category,
+          condition: condition,
+          brand: brand,
+          make: make || null,
+          model: model || null,
+          year_start: yearStart,
+          year_end: yearEnd,
+          image_url: imageUrl,
+          in_stock: true
+        };
+
+        console.log("Sending explicit data payload stream:", payload);
+
         const { data, error } = await _supabase
           .from('products')
-          .insert([
-            {
-              name: name,
-              price: price,
-              category: category,
-              condition: condition,
-              brand: brand,
-              make: make || null,
-              model: model || null,
-              year_start: yearStart,
-              year_end: yearEnd,
-              image_url: imageUrl,
-              in_stock: true
-            }
-          ])
-          .select(); // 👈 Instructs Supabase to return the raw data trace object on success
+          .insert([payload])
+          .select();
 
         if (error) {
-          // If Supabase sends back an explicit server error message, write it right to the screen
-          console.error("Supabase Engine Tracing Details:", error);
-          alertBox.innerText = "❌ Database Refusal: " + error.message + " (Code: " + error.code + ")";
-          alertBox.className = "error";
+          showErrorOnScreen("❌ Supabase Database Rejection: " + error.message + " (Code: " + error.code + " | Details: " + (error.details || 'None') + ")");
           return;
         }
 
-        console.log("Successfully inserted rows tracking array:", data);
         alertBox.innerText = "🎉 Success! The inventory row has been published directly into the storefront data grid clusters.";
         alertBox.className = "success";
+        alertBox.style.display = "block";
         form.reset();
-      } catch (err) {
-        console.error("Browser Context Loop Crash:", err);
-        alertBox.innerText = "❌ Connection Failure: " + err.message;
-        alertBox.className = "error";
+      } catch (catchErr) {
+        showErrorOnScreen("❌ Browser Internal Catch Crash: " + catchErr.message);
       } finally {
         btn.innerText = "Publish Part";
         btn.disabled = false;
       }
     });
   </script>
+
 </body>
 </html>
