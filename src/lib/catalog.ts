@@ -45,21 +45,28 @@ export function getBrands(): string[] {
 
 /** True only if the product has an explicit compatibility record covering the selection. */
 export function fitsVehicle(p: Product, sel: VehicleSelection): boolean {
-  if (!sel.make) return true;
-  if (!p.compatibility || !Array.isArray(p.compatibility)) return true; // 👈 Fixed: Defensive guard
+  if (!sel || !sel.make) return true;
+  
+  // 🛠️ CRUCIAL DEFENSIVE FIX: Guard against missing or malformed compatibility arrays from database items
+  if (!p || !p.compatibility || !Array.isArray(p.compatibility) || p.compatibility.length === 0) {
+    return true; // Treat as universally compatible to prevent undefined array crashes
+  }
+
   return p.compatibility.some(
     (c) =>
+      c &&
       c.make === sel.make &&
       (!sel.model || c.model === sel.model) &&
-      (!sel.year || (sel.year >= c.startYear && sel.year <= c.endYear)),
+      (!sel.year || (sel.year >= (c.startYear || 0) && sel.year <= (c.endYear || 3000))),
   );
 }
 
 export function matchesQuery(p: Product, q: string): boolean {
   const s = (q || "").trim().toLowerCase().replace(/[\s-]/g, "");
   if (!s) return true;
+  if (!p || !p.name) return false;
   const norm = (x: string) => (x || "").toLowerCase().replace(/[\s-]/g, "");
-  return [p.name, p.sku, p.oemNumber].some((f) => norm(f || "").includes(s));
+  return [p.name, p.sku || "", p.oemNumber || ""].some((f) => norm(f).includes(s));
 }
 
 export type SortKey = "relevance" | "price_asc" | "price_desc" | "name";
@@ -71,16 +78,16 @@ export interface ProductQuery extends VehicleSelection {
   brand?: string | undefined;
   inStock?: boolean | undefined;
   sort?: SortKey | undefined;
-  dbProducts?: Product[] | undefined; // 👈 Ensure type schema matches client states
+  dbProducts?: Product[] | undefined;
 }
 
 export function listProducts(query: ProductQuery = {}): Product[] {
-  // Safe array merge ensuring no undefined values crash the framework mapping operations
+  // Safe array initialization ensuring no undefined data objects mix into our loops
   const masterCollection = [...sampleProducts, ...(query.dbProducts || [])];
 
   let list = masterCollection.filter(
     (p) =>
-      p &&
+      p && p.id &&
       fitsVehicle(p, query) &&
       matchesQuery(p, query.q ?? "") &&
       (!query.category || p.category === query.category) &&
