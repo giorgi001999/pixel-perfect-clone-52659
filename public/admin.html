@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PARTS.GE — Administration Portal</title>
+  <style>
+    body { font-family: sans-serif; background-color: #09090b; color: #f4f4f5; margin: 0; padding: 0; min-height: 100vh; display: flex; flex-col: justify-between; }
+    header { border-bottom: 1px solid #27272a; background-color: #09090b; padding: 16px; }
+    .container { max-width: 42rem; margin: 0 auto; width: 100%; padding: 48px 16px; flex-grow: 1; }
+    h1 { font-size: 1.875rem; font-weight: 800; text-transform: uppercase; margin: 0 0 8px 0; color: #fff; }
+    p { color: #a1a1aa; font-size: 0.875rem; margin: 0 0 32px 0; }
+    form { background-color: #18181b; border: 1px solid #27272a; padding: 24px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+    .form-group { margin-bottom: 20px; }
+    label { display: block; id: text; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: #a1a1aa; margin-bottom: 6px; letter-spacing: 0.05em; }
+    .input-field { width: 100%; background-color: #09090b; border: 1px solid #27272a; border-radius: 6px; padding: 10px; font-size: 0.875rem; color: #fff; box-sizing: border-box; }
+    .input-field:focus { border-color: #ea580c; outline: none; }
+    .grid { display: grid; gap: 16px; grid-template-columns: 1fr 1fr; }
+    .btn-submit { width: 100%; background-color: #ea580c; color: #fff; height: 44px; font-weight: 700; border-radius: 6px; border: none; text-transform: uppercase; letter-spacing: 0.05em; cursor: pointer; margin-top: 16px; font-size: 0.875rem; }
+    .btn-submit:hover { background-color: #f97316; }
+    .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+    #alertBox { padding: 16px; margin-bottom: 24px; rounded-radius: 6px; font-size: 0.875rem; font-weight: 500; border: 1px solid transparent; display: none; }
+    .success { background-color: #064e3b; border-color: #059669; color: #a7f3d0; display: block !important; }
+    .error { background-color: #7f1d1d; border-color: #dc2626; color: #fecaca; display: block !important; }
+    .flex-header { max-width: 80rem; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; }
+    .logo { text-decoration: none; font-weight: 800; color: #fff; font-size: 1.25rem; }
+    .btn-back { text-decoration: none; font-size: 0.75rem; text-transform: uppercase; background-color: #27272a; color: #d4d4d8; font-weight: 700; padding: 6px 12px; border-radius: 6px; border: 1px solid #3f3f46; }
+  </style>
+</head>
+<body>
+
+  <div style="width: 100%; display: flex; flex-direction: column;">
+    <header>
+      <div class="flex-header">
+        <a href="/" class="logo">🛠️ PARTS<span style="color:#ea580c">.GE</span> ADMIN</a>
+        <a href="/products" class="btn-back">← Storefront</a>
+      </div>
+    </header>
+
+    <div class="container">
+      <h1>Upload Real Inventory</h1>
+      <p>Publish items directly to your live database storefront catalog.</p>
+
+      <div id="alertBox"></div>
+
+      <form id="adminForm">
+        <div class="form-group">
+          <label>Spare Part Name *</label>
+          <input required id="name" type="text" class="input-field" placeholder="e.g. Front Light Headlamp TOYOTA Prius">
+        </div>
+
+        <div class="grid form-group">
+          <div>
+            <label>Price (₾) *</label>
+            <input required id="price" type="number" step="0.01" class="input-field" placeholder="120.00">
+          </div>
+          <div>
+            <label>Condition *</label>
+            <select id="condition" class="input-field">
+              <option value="new_aftermarket">New · Aftermarket</option>
+              <option value="new_oem">New · Genuine OEM</option>
+              <option value="used_oem">Used · OEM</option>
+              <option value="refurbished">Refurbished</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid form-group">
+          <div>
+            <label>Category *</label>
+            <select required id="category" class="input-field">
+              <option value="Brakes">Brakes</option>
+              <option value="Electrical">Electrical</option>
+              <option value="Engine">Engine</option>
+              <option value="Filters">Filters</option>
+              <option value="Lighting">Lighting</option>
+              <option value="Suspension">Suspension</option>
+            </select>
+          </div>
+          <div>
+            <label>Brand *</label>
+            <select required id="brand" class="input-field">
+              <option value="Toyota">Toyota</option>
+              <option value="BMW">BMW</option>
+              <option value="Mercedes-Benz">Mercedes-Benz</option>
+              <option value="Hyundai">Hyundai</option>
+              <option value="Brembo">Brembo</option>
+              <option value="Aisin">Aisin</option>
+              <option value="Mann-Filter">Mann-Filter</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="border-top: 1px solid #27272a; padding-top: 20px; margin-top: 20px;">
+          <label style="color:#ea580c; margin-bottom: 12px; display:block;">Vehicle Compatibility</label>
+          <div class="grid form-group">
+            <input type="text" id="make" class="input-field" placeholder="Make (e.g. Toyota)">
+            <input type="text" id="model" class="input-field" placeholder="Model (e.g. Prius)">
+          </div>
+          <div class="grid form-group">
+            <input type="number" id="yearStart" class="input-field" placeholder="From Year">
+            <input type="number" id="yearEnd" class="input-field" placeholder="To Year">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Part Image URL</label>
+          <input id="imageUrl" type="url" class="input-field" placeholder="https://example.com">
+        </div>
+
+        <button type="submit" id="btn" class="btn-submit">Publish Part</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Optimized async script execution layer at the bottom -->
+  <script src="https://jsdelivr.net"></script>
+  <script>
+    // ⚠️ PASTE YOUR ACTUAL COPIED CREDENTIALS FROM YOUR SUPABASE SCREEN HERE
+    const supabaseUrl = "https://lqnojjapzsahfylvixnv.supabase.co"; 
+    const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxxbm9qamFwenNhaGZ5bHZpeG52Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIyNTIxMDEsImV4cCI6MjEwNzgyODEwMX0.CmLQ_1OHXJQxEo3zm7MVxu1ei1-_HQ6hSmG25ChMOXY";
+
+    const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
+    const form = document.getElementById('adminForm');
+    const alertBox = document.getElementById('alertBox');
+    const btn = document.getElementById('btn');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      btn.innerText = "Publishing part...";
+      btn.disabled = true;
+      alertBox.style.display = "none";
+      alertBox.className = "";
+
+      try {
+        const { error } = await _supabase.from('products').insert([
+          {
+            name: document.getElementById('name').value,
+            price: parseFloat(document.getElementById('price').value),
+            category: document.getElementById('category').value,
+            condition: document.getElementById('condition').value,
+            brand: document.getElementById('brand').value,
+            make: document.getElementById('make').value || null,
+            model: document.getElementById('model').value || null,
+            year_start: parseInt(document.getElementById('yearStart').value) || null,
+            year_end: parseInt(document.getElementById('yearEnd').value) || null,
+            image_url: document.getElementById('imageUrl').value || null,
+            in_stock: true
+          }
+        ]);
+
+        if (error) throw error;
+
+        alertBox.innerText = "🎉 Success! Product added to live store database.";
+        alertBox.className = "success";
+        form.reset();
+      } catch (err) {
+        alertBox.innerText = "❌ Database Error: " + err.message;
+        alertBox.className = "error";
+      } finally {
+        btn.innerText = "Publish Part";
+        btn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
