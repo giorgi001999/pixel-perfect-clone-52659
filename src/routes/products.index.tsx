@@ -1,8 +1,11 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { z } from "zod";
+import { useState, useEffect } from "react";
 import { ProductCard } from "@/components/store/ProductCard";
 import { VehicleSelector } from "@/components/store/VehicleSelector";
 import { conditionLabel, getBrands, getCategories, listProducts, type SortKey } from "@/lib/catalog";
+import { supabase } from "@/lib/supabase";
+import type { Product } from "@/lib/catalog-types";
 
 const schema = z.object({
   q: z.string().optional().catch(undefined),
@@ -18,6 +21,12 @@ const schema = z.object({
 
 export const Route = createFileRoute("/products/")({
   validateSearch: (s) => schema.parse(s),
+  head: () => ({
+    meta: [
+      { title: "Shop Car Parts — PARTS.GE" },
+      { name: "description", content: "Browse and filter car parts by vehicle, category, brand and condition." },
+    ],
+  }),
   component: Listing,
 });
 
@@ -25,33 +34,49 @@ const selCls = "h-10 w-full rounded-md border border-input bg-card px-3 text-sm"
 
 function Listing() {
   const s = Route.useSearch();
-  const products = listProducts({ ...s, sort: s.sort as SortKey }) || [];
+  const navigate = useNavigate({ from: "/products/" });
+  const set = (patch: Partial<typeof s>) => navigate({ search: (prev) => ({ ...prev, ...patch }) });
+
+  const [dbProducts, setDbProducts] = useState<Product[]>([]);
+
+  // Automatically load real database parts uploaded via the admin panel
+  useEffect(() => {
+    async function loadLiveParts() {
+      try {
+        if (!supabase) return;
+        const { data, error } = await supabase.from('products').select('*');
+        if (error) throw error;
+        
+        if (data) {
+          // Format raw PostgreSQL fields to align seamlessly with Lovable's Product type structure
+          const formatted: Product[] = data.map((p: any) => ({
+            id: p.id || String(Math.random()),
+            name: p.name || "Unnamed Component",
+            sku: String(p.id || '').slice(0, 8).toUpperCase(),
+            oemNumber: String(p.id || '').slice(0, 10).toUpperCase(),
+            priceGel: Number(p.price) || 0,
+            category: p.category || "Other",
+            condition: (p.condition || 'new_aftermarket') as any,
+            brand: p.brand || "Generic",
+            stock: p.in_stock ? "in_stock" : "out_of_stock",
+            imageUrl: p.image_url || undefined,
+            featured: false,
+            compatibility: p.make ? [{
+              make: p.make,
+              model: p.model || "",
+              startYear: Number(p.year_start) || 2000,
+              endYear: Number(p.year_end) || 2026
+            }] : []
+          }));
+          setDbProducts(formatted);
+        }
+      } catch (err) {
+        console.error("Database alignment fallback log:", err);
+      }
+    }
+    loadLiveParts();
+  }, []);
+
+  // Inject real dbProducts array straight into the static search pipeline
+  const products = listProducts({ ...s, sort: s.sort as SortKey, dbProducts }) || [];
   const vehicle = [s.make, s.model, s.year].filter(Boolean).join(" ");
-
-  return (
-    <div className="mx-auto grid max-w-7xl gap-8 px-4 py-8 lg:grid-cols-[260px_1fr]">
-      <aside className="space-y-6">
-        <div>
-          <h2 class="mb-2 text-lg font-bold uppercase">Your vehicle</h2>
-          <VehicleSelector key={vehicle} initial={s} compact />
-        </div>
-        <div className="space-y-3">
-          <h2 className="text-lg font-bold uppercase">Filters</h2>
-          <select aria-label="Category" class={selCls} value={s.category ?? ""}>
-            <option value="">All categories</option>
-            {getCategories().map((c) => <option key={c} value={c}>{c}</option>)}
-          </select>
-        </div>
-      </aside>
-
-      <section>
-        <h1 class="text-3xl font-bold uppercase border-b pb-4">{vehicle ? `Parts for ${vehicle}` : "All parts"}</h1>
-        <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {products.map((p) => (
-            <ProductCard key={p.id} product={p} />
-          ))}
-        </div>
-      </section>
-    </div>
-  );
-}
